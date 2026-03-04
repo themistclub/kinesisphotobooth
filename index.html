@@ -3,91 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KINESIS PHOTOBOOTH</title>
+    <title>KINESIS - GOTHIC PHOTOBOOTH</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap');
-        
         body {
-            background-color: #050505;
-            color: #eeeeee;
-            font-family: 'Cinzel', serif;
+            /* 1. 색상: 깊은 차콜 배경 */
+            background-color: #0a0a0a;
+            /* 2. 타이포그래피: 클래식 세리프 폰트 */
+            font-family: 'Garamond', serif; 
+            color: #d4d4d4; 
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             margin: 0;
+            overflow: hidden;
         }
-        h1 { letter-spacing: 0.2em; font-size: 2rem; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .camera-container {
+
+        /* 헤더 스타일 */
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-weight: normal;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            font-size: 2.5em;
+            margin: 0;
+            color: #fdfdfd;
+        }
+        .header-line {
+            width: 80%;
+            height: 1px;
+            background-color: #333;
+            margin: 10px auto;
+        }
+
+        /* 3. 레이아웃: 2분할 세로 프레임 */
+        .photobooth-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        /* 웹캠 미리보기 영역 */
+        #webcam-view {
+            width: 300px;
+            height: 375px; 
+            background: #000;
+            border: 1px solid #333;
+            overflow: hidden;
             position: relative;
+        }
+        #webcam-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 2분할 포토 프레임 영역 */
+        #photo-frame {
             width: 320px;
-            height: 400px;
-            background: #111;
-            border: 2px solid #333;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
-        }
-        video { width: 100%; height: 100%; object-fit: cover; filter: grayscale(30%) contrast(120%); }
-        /* 여기에 디자인한 프레임 이미지를 덧씌웁니다 */
-        .frame-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            /* background-image: url('kinesis_frame.png'); */
-            /* background-size: cover; */
-            border: 8px solid #1a1a1a;
+            height: 800px; /* 320x400 사진 2장 + 여백 */
+            border: 15px solid #000; /* 검은색 테두리 */
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
             box-sizing: border-box;
+            gap: 10px;
+            position: relative;
         }
+        
+        /* [메모: 장식 요소(png)를 배치하려면 이곳에 배경 이미지 설정] */
+        /* background-image: url('gothic-frame-texture.png'); */
+
+        .photo-slot {
+            width: 100%;
+            height: 350px; /* 320x350 비율의 사진 공간 */
+            background-color: #111; /* 사진이 없는 공간 */
+            border: 1px solid #222;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .captured-photo {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+
+        /* 컨트롤 영역 */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+            align-items: center;
+        }
+
         button {
-            margin-top: 30px;
-            padding: 12px 30px;
             background-color: transparent;
-            color: #fff;
-            border: 1px solid #555;
-            font-family: 'Cinzel', serif;
-            font-size: 1.2rem;
+            color: #d4d4d4;
+            border: 1px solid #d4d4d4;
+            padding: 10px 25px;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        button:hover { background-color: #eee; color: #000; }
-        canvas { display: none; }
+        
+        button:hover {
+            background-color: #800000; /* 다크 크림슨 포인트 */
+            border-color: #800000;
+            color: #fff;
+        }
+        
+        button:disabled {
+            border-color: #333;
+            color: #333;
+            cursor: default;
+        }
+
+        #retry-btn {
+            display: none; /* 초기에는 숨김 */
+        }
+
+        /* 숨겨진 캔버스 (사진 합치기용) */
+        canvas {
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-    <h1>KINESIS</h1>
-    
-    <div class="camera-container">
-        <video id="video" autoplay playsinline></video>
-        <div class="frame-overlay"></div>
+    <header>
+        <h1>KINESIS</h1>
+        <div class="header-line"></div>
+    </header>
+
+    <div class="photobooth-container">
+        <div id="webcam-view">
+            <video id="webcam-video" autoplay playsinline></video>
+        </div>
+
+        <div id="photo-frame">
+            <div class="photo-slot" id="slot-1">
+                </div>
+            <div class="photo-slot" id="slot-2">
+                </div>
+        </div>
     </div>
 
-    <button id="captureBtn">CAPTURE</button>
-    <canvas id="canvas" width="320" height="400"></canvas>
+    <div class="controls">
+        <button id="capture-btn">TAKE A PHOTO</button>
+        <button id="retry-btn">RETRY</button>
+    </div>
+
+    <canvas id="final-canvas" width="320" height="800"></canvas>
 
     <script>
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const captureBtn = document.getElementById('captureBtn');
+        const video = document.getElementById('webcam-video');
+        const captureBtn = document.getElementById('capture-btn');
+        const retryBtn = document.getElementById('retry-btn');
+        const slots = [document.getElementById('slot-1'), document.getElementById('slot-2')];
+        const canvas = document.getElementById('final-canvas');
+        const context = canvas.getContext('2d');
 
-        // 웹캠 연결
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => { video.srcObject = stream; })
-            .catch(err => { console.error("Camera access denied:", err); });
+        let captureCount = 0; // 캡처 횟수 카운트
+        let currentStream = null;
 
-        // 캡처 기능
-        captureBtn.addEventListener('click', () => {
-            const context = canvas.getContext('2d');
-            // 비디오 화면 캔버스에 그리기
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // 웹캠 시작
+        async function startWebcam() {
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = currentStream;
+            } catch (err) {
+                console.error("웹캠 접근 실패:", err);
+                alert("웹캠에 접근할 수 없습니다. 카메라 권한을 확인해주세요.");
+            }
+        }
+
+        // 캡처 기능 (RETRY 기능을 위해 수정)
+        function capturePhoto() {
+            if (captureCount >= 2) return; // 이미 두 번 다 찍었으면 중단
+
+            // 임시 캔버스 생성
+            const tempCanvas = document.createElement('canvas');
+            const tempContext = tempCanvas.getContext('2d');
+            tempCanvas.width = video.videoWidth;
+            tempCanvas.height = video.videoHeight;
             
-            // 이미지 다운로드
-            const dataUrl = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download = 'kinesis_photo.png';
-            link.click();
-        });
+            // 캔버스에 비디오 화면 그리기
+            tempContext.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // 이미지 데이터 생성
+            const dataUrl = tempCanvas.toDataURL('image/png');
+            
+            // 이미지 태그 생성 후 해당 슬롯에 추가
+            const img = document.createElement('img');
+            img.src = dataUrl;
+            img.className = 'captured-photo';
+            slots[captureCount].innerHTML = ''; // 기존 내용 삭제
+            slots[captureCount].appendChild(img);
+            
+            captureCount++;
+
+            // 버튼 텍스트 업데이트
+            if (captureCount === 1) {
+                captureBtn.textContent = "TAKE A SECOND PHOTO";
+            } else if (captureCount === 2) {
+                captureBtn.disabled = true; // 캡처 버튼 비활성화
+                captureBtn.style.display = 'none'; // 캡처 버튼 숨김
+                retryBtn.style.display = 'block'; // RETRY 버튼 표시
+                finalizePhoto(); // 최종 사진 합치기
+            }
+        }
+
+        // RETRY 기능: 초기화
+        function retry() {
+            captureCount = 0;
+            slots[0].innerHTML = ''; // 슬롯 내용 초기화
+            slots[1].innerHTML = '';
+            captureBtn.textContent = "TAKE A PHOTO";
+            captureBtn.disabled = false;
+            captureBtn.style.display = 'block'; // 캡처 버튼 다시 표시
+            retryBtn.style.display = 'none'; // RETRY 버튼 숨김
+            context.clearRect(0, 0, canvas.width, canvas.height); // 최종 캔버스 초기화
+        }
+
+        // 최종 사진 합치기 (자동 저장 안 함)
+        function finalizePhoto() {
+            const slotImages = document.querySelectorAll('.captured-photo');
+            if (slotImages.length < 2) return;
+
+            // 1. 프레임 배경 그리기
+            context.fillStyle = '#000000'; // 프레임 배경색
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. 각 사진을 캔버스에 그리기
+            slotImages.forEach((img, index) => {
+                const yPos = 20 + (index * 360); // 사진 위치 계산 (여백 포함)
+                context.drawImage(img, 20, yPos, 280, 350); // 캔버스 크기에 맞춰 비율 조정
+            });
+
+            // [메모: 그래픽 장식 요소(png)를 캔버스 위에 겹쳐 그릴 경우]
+            // const frameDecor = new Image();
+            // frameDecor.src = 'gothic-decor.png';
+            // frameDecor.onload = () => { context.drawImage(frameDecor, 0, 0, canvas.width, canvas.height); };
+        }
+
+        // 이벤트 리스너 등록
+        captureBtn.addEventListener('click', capturePhoto);
+        retryBtn.addEventListener('click', retry);
+
+        // 페이지 로드 시 웹캠 시작
+        window.addEventListener('load', startWebcam);
+
     </script>
 </body>
 </html>
